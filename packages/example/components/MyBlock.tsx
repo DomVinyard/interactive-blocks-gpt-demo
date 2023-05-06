@@ -16,18 +16,13 @@ export const MyBlock = memo(function MyBlock(props: { index: number; item: MyDat
   const propsCache = useRef<{ index: number; item: MyDataItem }>();
   useImperativeHandle(propsCache, () => ({ index, item }), [index, item]);
 
-  const { blockContext, blockHandler, BlockWrapper } = useBlockHandler(
-    () => ({
-      data: () => myDataItemToClipboardData(propsCache.current!.item),
-      index: () => propsCache.current!.index,
-      onStatusChange: () => forceUpdate(),
-    })
-  );
+  const { blockContext, blockHandler, BlockWrapper } = useBlockHandler(() => ({
+    data: () => myDataItemToClipboardData(propsCache.current!.item),
+    index: () => propsCache.current!.index,
+    onStatusChange: () => forceUpdate(),
+  }));
 
-  const domEventHandlers = useMemo(
-    () => blockHandler.getDOMEvents("react", { isDraggable: true }),
-    []
-  );
+  const domEventHandlers = useMemo(() => blockHandler.getDOMEvents("react", { isDraggable: true }), []);
 
   const addChild = useCallback(() => {
     const path = getPathFromOwnerBlock(blockHandler); // current block's path, like [0,1,0]
@@ -46,28 +41,26 @@ export const MyBlock = memo(function MyBlock(props: { index: number; item: MyDat
 
   const { activeNumber, isActive } = blockHandler;
 
-  return <BlockWrapper>
-    <div
-      className={classnames("myBlock", isActive && "isActive")}
-      tabIndex={-1}
-      draggable
-      {...domEventHandlers}
-    >
-      {isActive && <div className="myBlock-selectIndex">{activeNumber as number + 1}</div>}
+  return (
+    <BlockWrapper>
+      <div className={classnames("myBlock", isActive && "isActive")} tabIndex={-1} draggable {...domEventHandlers}>
+        {isActive && <div className="myBlock-selectIndex">{(activeNumber as number) + 1}</div>}
 
-      <MyBlockName name={item.name} blockHandler={blockHandler} />
+        <MyBlockName name={item.name} blockHandler={blockHandler} />
 
-      <MySlot>
-        {item.children?.length
-          ? item.children.map((item, index) => <MyBlock key={index} index={index} item={item} />)
-          : null}
+        <MySlot>
+          {item.children?.length
+            ? item.children.map((item, index) => <MyBlock key={index} index={index} item={item} />)
+            : null}
 
-        <button className="myBlock-addButton" onClick={addChild}>Create...</button>
-      </MySlot>
-    </div>
-  </BlockWrapper>;
+          <button className="myBlock-addButton" onClick={addChild}>
+            Create...
+          </button>
+        </MySlot>
+      </div>
+    </BlockWrapper>
+  );
 });
-
 
 const MyBlockName = (props: { name: string; blockHandler: BlockHandler }) => {
   const [, dispatch] = useStore();
